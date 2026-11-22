@@ -50,7 +50,7 @@
         const admin = Boolean(user?.emailVerified && user.email?.toLowerCase() === administrator);
         window.crodCanEdit = () => admin;
         login.hidden = Boolean(user); logout.hidden = !user;
-        status.textContent = admin ? 'ผู้ดูแล · Firebase' : user ? 'ดูข้อมูลเท่านั้น' : 'ดูข้อมูลได้ · เข้าสู่ระบบเพื่อแก้ไข';
+        status.textContent = admin ? 'ผู้ดูแล · Firebase' : user ? 'ดูข้อมูลเท่านั้น' : 'เข้าสู่ระบบเพื่อใช้สิทธิ์ผู้ดูแล';
         window.dispatchEvent(new Event('crod-permissions-change'));
       });
       login.onclick = async () => {

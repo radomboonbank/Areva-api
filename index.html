@@ -529,7 +529,7 @@
           mapConnection.hidden = true;
           mapStatus.textContent = "";
         } else {
-          mapStatus.textContent = window.ArevaConfig?.nccGateway ? "เชื่อมต่อ NCC ไม่สำเร็จ" : "Database CROD พร้อมใช้งานออนไลน์ · การแสดงค่าจุดวัดและกราฟต้องตั้งค่า HTTPS Gateway ที่เข้าถึง NCC ได้";
+          mapStatus.textContent = window.ArevaConfig?.nccGateway ? "เชื่อมต่อ NCC ไม่สำเร็จ" : "เว็บเชื่อมฐานข้อมูล CROD ผ่าน Firebase · การแสดงค่าจุดวัดและกราฟต้องตั้งค่า HTTPS Gateway ที่เข้าถึง NCC ได้";
           retryConnection.hidden = false;
         }
       } finally {

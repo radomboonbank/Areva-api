@@ -8,7 +8,7 @@ service cloud.firestore {
         && request.auth.token.firebase.sign_in_provider == 'google.com';
     }
     match /crod/database {
-      allow get: if true;
+      allow get: if isAdmin();
       allow update: if isAdmin()
         && request.resource.data.keys().hasOnly(['rowsJson', 'revision', 'updatedAt', 'updatedBy'])
         && request.resource.data.rowsJson is string

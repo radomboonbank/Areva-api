@@ -25,12 +25,12 @@
       const state=window.crodDatabaseRequest ? await window.crodDatabaseRequest('GET') : JSON.parse(localStorage.getItem(storageKey)||'null');
       changed(CrodValidation.validate(state?.rows ?? seed));
       revision=state?.revision ?? 0;ready=true;message('');
-    } catch (error) {ready=false;message(error.message || 'อ่านฐานข้อมูลไม่สำเร็จ กรุณาปิดแล้วเปิด Database CROD อีกครั้ง',true);}
+    } catch (error) {ready=false;message(error.code==='permission-denied' ? 'ยังไม่มีสิทธิ์อ่านฐานข้อมูล กรุณาเข้าสู่ระบบผู้ดูแล' : (error.message || 'อ่านฐานข้อมูลไม่สำเร็จ กรุณาปิดแล้วเปิด Database CROD อีกครั้ง'),true);}
     render();
   }
   function action(text,fn,style='') {const b=document.createElement('button');b.type='button';b.textContent=text;b.className=style;b.disabled=busy||!ready||!canEdit();b.onclick=fn;return b;}
   const canEdit=()=>!window.crodCanEdit || window.crodCanEdit();
-  window.addEventListener('crod-permissions-change',()=>{if(!canEdit())editing=null;render();});
+  window.addEventListener('crod-permissions-change',()=>{if(!canEdit())editing=null;if(!ready&&canEdit())load();else render();});
   function render() {
     tbody.replaceChildren();
     const query=find('db-search').value.trim().toLowerCase();
