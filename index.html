@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>N days - PointValueByPeriodTime</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;700&amp;display=swap">
+  <link rel="stylesheet" href="crod-editor.css">
+  <style>
+    * { box-sizing: border-box }
+    body { margin: 0; background: #f1f5f5; color: #193e43; font: 17px/1.6 "Noto Sans Thai", sans-serif; height: auto; display: block; grid-template-rows: auto minmax(0, 1fr); min-height: 100dvh }
+    header { background: #deefdf; color: #214b3c; padding: 18px 16px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap }
+    h1 { margin: 4px 0; font-size: clamp(20px, 3vw, 28px); overflow-wrap: anywhere }
+    header img { width: min(300px, 100%); aspect-ratio: 440 / 64; object-fit: cover }
+
+    main { width: 100%; margin: 0; padding: 20px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; min-height: 0; align-items: start }
+    .pane { overflow: auto; overscroll-behavior: contain; padding: 0; min-width: 0; height: var(--pane-height, calc(100dvh - 130px)); max-height: none }
+    .card { margin-bottom: 12px }
+    #crod-database { margin:0 0 16px; overflow-x:auto }
+    #province-select { width:100%; min-width:10em; font:inherit; color:inherit; border:1px solid #799598; border-radius:6px; padding:8px 10px; background:white }
+    #map-connection:not([hidden]) { display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px }
+    #map-connection { font-size:.9em }
+    #retry-connection { padding:5px 10px }
+    .crod-groups th, .crod-groups td { border:1px solid #cfdddd; padding:4px 10px }
+    .crod-groups tbody th { background:white; font-weight:400 }
+    .crod-groups td, .crod-groups thead th:not(:first-child) { text-align:center }
+    .crod-groups button { padding:2px 12px; font-size:13px; line-height:1.5 }
+
+    .filters { display: flex; flex-wrap: wrap; gap: 8px }
+    .filters label { display: flex; align-items: center; gap: 4px }
+    .filters input[type=search] { width: 12em }
+    label { min-width: 0 }
+    table { width: 100%; border-collapse: collapse; font-size: .9em }
+    th, td { text-align: left; padding: 6px; border-bottom: 1px solid #cfdddd; overflow-wrap: normal; white-space:nowrap }
+    th { background: #e9f2f1 }
+    @media (max-width: 650px) {
+      main { padding: 0 4px; gap: 4px }
+      .pane form, .pane .card { padding: 8px }
+      header { padding: 6px 10px }
+      header img { width: 130px }
+    }
+    form, .card { background: white; padding: 24px; border: 1px solid #cfdddd; border-radius: 12px }
+    h2 { margin: 0 0 20px; font-size: 1.25rem }
+    .fields { display: flex; align-items: end; flex-wrap: wrap; gap: 20px }
+    label { display: grid; gap: 6px }
+    input, button { font: inherit; color: inherit; padding: 9px 14px; border: 1px solid #799598; border-radius: 6px; background: white; max-width: 100% }
+    button { background: #e1d4f4; border-color: #bda8d7; color: #402958; cursor: pointer }
+    fieldset { border: 0; padding: 0; margin: 20px 0 0; min-width: 0 }
+    button:disabled { opacity: .55; cursor: default }
+    small { display: block; margin-top: 14px }
+    .date-field { display: grid; gap: 6px }
+    .date-trigger { background: white; color: inherit; border-color: #799598; text-align: left; min-width: min(13em,100%) }
+    #thai-calendar { position: fixed; inset: auto; margin: 0; padding: 8px; width: min(276px,96vw); max-height: 92dvh; border: 1px solid #cfdddd; border-radius: 8px; box-shadow: 0 5px 22px #18383d33; color: #354959 }
+    #thai-calendar::backdrop { background: transparent }
+    #thai-calendar button { background: white; border: 0; color: inherit; padding: 6px 2px; font: inherit }
+    #thai-calendar button:hover:enabled, #thai-calendar button:focus-visible { background: #e8f3f7 }
+    #thai-calendar button[aria-pressed=true] { color: white; background: linear-gradient(#0099ba,#1145c6) }
+    .calendar-nav, .calendar-footer { display: flex; align-items: center; justify-content: space-between }
+    .calendar-nav button { flex: 1 }
+    .calendar-nav #calendar-title { flex: 5 }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); text-align: center }
+    .calendar-grid.choices { grid-template-columns: repeat(4,minmax(0,1fr)) }
+    .calendar-grid.choices button { min-height: 52px }
+    .calendar-grid .outside { opacity: .6 }
+    .calendar-footer { margin-top: 6px; border-top: 1px solid #dce5ea }
+    #snapshots td { padding: 3px 6px; line-height: 1.3 }
+    #snapshots td button { padding: 3px 9px; font-size: 14px; line-height: 1.3; border-radius: 4px }
+
+
+
+    #period-chart { grid-column:1 / -1; min-width:0; padding:28px }
+    #period-chart h2 { margin-bottom:8px }
+    .energy-summary { min-width:0; border:1px solid #cfdddd; border-radius:10px; padding:12px; align-self:start }
+    .energy-table-wrap { overflow-x:auto; margin-top:10px }
+    .energy-table th, .energy-table td { padding:10px 14px; vertical-align:middle }
+    .energy-table th:not(:first-child), .energy-table td:not(:first-child) { text-align:right; width:18%; min-width:9em; font-variant-numeric:tabular-nums }
+    .energy-table th:last-child, .energy-table td:last-child { background:#f0f7f4; font-weight:700 }
+    .energy-table th:last-child { background:#deeee5 }
+    .energy-table .energy-total td { background:#e9f2f1; border-top:2px solid #a8c2be; font-weight:700 }
+    @media(max-width:800px) {
+      main { grid-template-columns:1fr; padding:10px }
+      #period-chart { padding:12px }
+    }
+
+    #snapshots h2 { display:flex; flex-wrap:wrap; align-items:baseline; gap:8px 16px }
+    .point-count { font-size:.8em; font-weight:400; white-space:nowrap; color:#526a6b }
+    #details { overflow-x:auto; border:1px solid #d4e2e1; border-radius:8px }
+    .selected-points th { padding:10px 12px; white-space:nowrap }
+    .selected-points td { padding:10px 12px; vertical-align:middle }
+    .selected-points tbody tr:nth-child(even) { background:#f5f9f8 }
+    .selected-points tbody tr:last-child td { border-bottom:0 }
+    .selected-points td:nth-child(2) { font-variant-numeric:tabular-nums; white-space:nowrap }
+    .selected-points td:last-child { width:1%; white-space:nowrap }
+    .selected-points button { padding:5px 12px; font-size:.9em }
+    #map-filters { padding:16px; display:grid; gap:12px }
+    #map-filters h2 { margin:0 }
+    #map-filters .filters { gap:8px 12px; align-items:center }
+    #map-filters .filter-search { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)) auto; width:100%; max-width:640px }
+    #map-filters input[type=search] { width:100%; min-width:0; padding:8px 12px }
+    #map-filters button { padding:6px 14px; margin-left:auto }
+    #map-filters label { white-space:nowrap }
+    @media(max-width:420px) { #map-filters .filter-search { gap:6px } }
+    .pane.connected { display:flex; flex-direction:column; overflow:hidden; min-height:0 }
+    .pane.connected #map-filters { flex:none }
+    .pane.connected #snapshots { flex:1; min-height:0; display:flex; flex-direction:column }
+    .pane.connected #snapshots > .card { flex:1; min-height:0; display:flex; flex-direction:column; margin-bottom:0; overflow:hidden }
+    .pane.connected #snapshots h2 { flex:none }
+    .snapshot-scroll { min-height:0; overflow:auto; flex:1 }
+    .snapshot-scroll table { border-collapse:separate; border-spacing:0 }
+    .snapshot-scroll th { position:sticky; top:0; z-index:2; background:#e9f2f1 }
+    #map-filters h2, #period-form h2 { font-size: 1.25rem; font-weight: 700; line-height: 1.6 }
+    #period-form button[type="submit"] { background: #dec3a5; border-color: #bd9872; color: #493220 }
+    .sort-toggle[aria-pressed="false"] { background: #fafafa; color: #444; border-color: #ccc; text-decoration: line-through }
+    .sort-toggle[aria-pressed="true"] { background: #f8cccc; color: #711f1f; border-color: #dfa0a0; text-decoration: none }
+    /* Keep measurements and controls readable at every viewport width. */
+    th, td { white-space:nowrap; overflow-wrap:normal; word-break:normal }
+    button { white-space:nowrap; flex-shrink:0; line-height:1.4 }
+    .snapshot-scroll table { width:100%; min-width:660px; table-layout:auto }
+    #snapshots th, #snapshots td { padding:8px 10px }
+    #snapshots td button { min-width:64px; min-height:34px; padding:5px 10px }
+    #snapshots th:nth-child(2), #snapshots td:nth-child(2) { min-width:100px }
+    #snapshots th:nth-child(3), #snapshots td:nth-child(3) { min-width:120px; font-variant-numeric:tabular-nums }
+    .selected-points { min-width:560px }
+    #period-form .fields { gap:14px; align-items:end }
+    #period-form .date-field { flex:1 1 200px }
+    #period-form .date-trigger { min-width:0; width:100% }
+    .sort-toggle { display:inline-block; margin-left:6px; vertical-align:middle }
+    @media(max-width:1200px), (orientation:portrait) {
+      main { grid-template-columns:minmax(0,1fr); padding:16px; gap:16px }
+      .pane { height:auto; max-height:none; overflow:visible }
+      .pane.connected { height:auto; overflow:visible }
+      .pane.connected #snapshots { flex:none }
+      .pane.connected #snapshots > .card { flex:none }
+      .snapshot-scroll { flex:none; max-height:55dvh; overflow:auto }
+      #map-filters { padding:18px }
+      #details { max-height:40dvh; overflow:auto }
+      header { gap:12px; padding:16px }
+      header img { width:220px }
+    }
+    @media(max-width:540px) {
+      main { padding:8px; gap:12px }
+      form, .card, #map-filters { padding:12px }
+      #period-form .date-field { flex-basis:100% }
+      header img { width:160px }
+    }
+    #snapshots td:nth-child(3), #snapshots th:nth-child(3) { text-align:right }
+    .period-options { display:flex; flex-wrap:wrap; align-items:end; gap:14px; margin-bottom:16px }
+    .period-options select, .axis-select { font:inherit; color:inherit; border:1px solid #799598; border-radius:6px; background:white; padding:8px 10px }
+    .axis-option { display:flex; align-items:center; gap:8px; padding:9px 0 }
+    .axis-select { font-size:.85em; padding:3px 6px; margin-left:6px }
+    #period-form[aria-busy="true"] button[type=submit]::before { content:""; display:inline-block; width:14px; height:14px; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; margin-right:8px; animation:spin .8s linear infinite }
+    @keyframes spin { to { transform:rotate(360deg) } }
+    @media(prefers-reduced-motion:reduce) { #period-form[aria-busy="true"] button[type=submit]::before { animation:none } }
+  </style>
+<script src="firebase-config.js"></script>
+  <script src="firebase-client.js"></script>
+  <script src="ncc-client.js"></script>
+</head>
+<body>
+  <header><div class="header-title"><h1>N days - PointValueByPeriodTime</h1><button id="open-crod-database" type="button">Database CROD</button></div><img src="meters.png" alt=""></header>
+  <main>
+    <section class="pane" aria-label="PointMapValueByTime" tabindex="0">
+      <form class="card" id="map-filters">
+        <h2>ขั้นตอนที่ 1 : เลือกข้อมูลจุดวัดที่จะวาดกราฟ</h2>
+        <div id="map-connection" hidden><span id="map-status" role="status"></span><button id="retry-connection" type="button" hidden>ลองเชื่อมต่ออีกครั้ง</button></div>
+        <div class="filters filter-search">
+          <input type="search" placeholder="ข้อความ Filter 1" aria-label="ข้อความ Filter 1">
+          <input type="search" placeholder="ข้อความ Filter 2" aria-label="ข้อความ Filter 2">
+          <button type="reset">Reset</button>
+        </div>
+        <div class="filters">
+          <label><input type="checkbox" value="(MW)">MW</label>
+          <label><input type="checkbox" value="(MV)">MV</label>
+          <label><input type="checkbox" value="(MVA)">MVA</label>
+          <label><input type="checkbox" value="LINE">LINE</label>
+          <label><input type="checkbox" value="PEA">PEA</label>
+          <label><input type="checkbox" value="XF">TX</label>
+          <label><input type="checkbox" value="สฟ. อปก">สฟ. อปก</label>
+          <label><input type="checkbox" value="nonzero">ไม่ 0</label><label><input type="checkbox" value="no-kv">ไม่ V</label>
+        </div>
+      </form>
+      <div id="snapshots"></div>
+    </section>
+    <section class="pane" aria-label="เลือกจุดวัดและช่วงวันที่" tabindex="0">
+    <section class="card" id="crod-database">
+      <h2>ฐานข้อมูลจุดวัด CROD</h2>
+      <table class="crod-groups"><thead><tr><th scope="col">กลุ่มข้อมูล</th><th scope="col">MW</th><th scope="col">MV</th></tr></thead>
+        <tbody id="crod-rows"></tbody>
+      </table>
+      <p id="crod-count" role="status"></p>
+    </section>
+    <form id="period-form" method="post" action="http://control.egat.co.th/cacservice/WebService.asmx/PointValueByPeriodTime" >
+      <h2>ขั้นตอนที่ 2 : เลือกช่วงวันที่ของข้อมูล</h2>
+      <p id="status" role="status" hidden></p>
+      <div id="details" hidden></div>
+      <fieldset id="period" disabled aria-label="เลือกช่วงวันที่">
+      <div class="period-options">
+        <label>ช่วงวันที่สำเร็จรูป<select id="date-preset">
+          <option value="">กำหนดเอง</option><option value="1">1 วันล่าสุด</option><option value="7">7 วันล่าสุด</option>
+          <option value="30">30 วันล่าสุด</option><option value="90">90 วันล่าสุด</option><option value="month">เดือนนี้</option>
+          <option value="previous">เดือนที่แล้ว</option><option value="three">สามเดือนที่แล้ว</option>
+        </select></label>
+        <label class="axis-option"><input id="dual-axis" type="checkbox">แยกแกน Y ซ้าย/ขวา</label>
+      </div><small>ช่วงข้อมูล 00:00 ของวันแรก ถึง 23:30 ของวันสุดท้าย · วันล่าสุดนับวันเต็มถึงเมื่อวาน</small><div class="fields">
+        <div class="date-field"><span id="start-label">วันที่เริ่มต้น</span><button type="button" class="date-trigger" data-field="start" aria-haspopup="dialog" aria-labelledby="start-label start-display"><span id="start-display">เลือกวันที่</span></button><input type="hidden" id="start"></div>
+        <div class="date-field"><span id="end-label">วันที่สิ้นสุด</span><button type="button" class="date-trigger" data-field="end" aria-haspopup="dialog" aria-labelledby="end-label end-display"><span id="end-display">เลือกวันที่</span></button><input type="hidden" id="end"></div>
+        <button type="submit">แสดงกราฟ</button>
+      </div>
+      </fieldset>
+      <p id="period-status" role="status"></p>
+    </form>
+
+    </section>
+    <section id="period-chart" class="card" hidden></section>
+  </main>
+  <script src="crod-database.js"></script>
+  <script src="period-utils.js"></script>
+  <script>
+
+    const pageHeader = document.querySelector("header");
+    function resizePanes() {
+      const main = document.querySelector("main");
+      const spacing = parseFloat(getComputedStyle(main).paddingTop) + parseFloat(getComputedStyle(main).paddingBottom);
+      document.documentElement.style.setProperty("--pane-height", Math.max(240, window.innerHeight - pageHeader.getBoundingClientRect().height - spacing) + "px");
+    }
+    new ResizeObserver(resizePanes).observe(pageHeader);
+    window.addEventListener("resize", resizePanes);
+    resizePanes();
+    const form = document.querySelector("#period-form");
+    const status = document.querySelector("#status");
+    const period = document.querySelector("#period");
+    const details = document.querySelector("#details");
+
+    const selectedPoints = new Map();
+    const aggregateGroups = new Map();
+    const aggregateDefinitions = new Map();
+    const refreshGroupButtons = [];
+    const databaseRows = document.querySelector("#crod-rows");
+    const provinces = ["จันทบุรี","ฉะเชิงเทรา","ชลบุรี","ตราด","นครนายก","ปราจีนบุรี","ระยอง","ลพบุรี","สระแก้ว","สระบุรี","สุพรรณบุรี","อยุธยา","อ่างทอง"];
+    const databaseGroups = [
+      ["โหลด 22 kV", row => Number(row[1]) === 22],
+      ["โหลด 115 kV", row => Number(row[1]) === 115],
+      ["โหลด ทั้งหมด", row => [22, 115].includes(Number(row[1]))],
+      ...provinces.map(name => [name, row => row[6] === name])
+    ];
+    function selectDatabaseGroup(label, matches, index) {
+      const unit = index === 2 ? "MW" : "MV";
+      const members = Array.from(new Map(CrodDatabase.filter(matches)
+        .filter(row => row[index+1])
+        .map(row => [String(row[index+1]), {pk:String(row[index+1]),name:row[index]}])).values());
+      if (!members.length) return;
+      const key = "SUM_" + unit + "_" + label;
+      aggregateDefinitions.set(key, {label,matches,index});
+      aggregateGroups.set(key, members);
+      selectedPoints.set(key, label + " ผลรวม (" + unit + ")");
+      renderSelection();
+      document.querySelector("#crod-count").textContent = "เพิ่ม " + label + " " + unit + " · รวม " + members.length + " จุดวัด";
+    }
+    function appendGroupButtons(row, getGroup) {
+      return [2,4].map(index => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = "เลือก";
+        const update = () => {
+          const group = getGroup();
+          const unit = index === 2 ? "MW" : "MV";
+          button.disabled = !group || !CrodDatabase.some(record => group[1](record) && record[index+1]);
+          button.setAttribute("aria-label", "เลือก " + (group?.[0] || "จังหวัด") + " " + unit);
+        };
+        button.onclick = () => {
+          const group = getGroup();
+          if (group) selectDatabaseGroup(...group, index);
+        };
+        row.insertCell().append(button);
+        update();
+        return update;
+      });
+    }
+    for (const group of databaseGroups.slice(0,3)) {
+      const row = databaseRows.insertRow();
+      const heading = document.createElement("th");
+      heading.scope = "row";
+      heading.textContent = group[0];
+      row.append(heading);
+      refreshGroupButtons.push(...appendGroupButtons(row, () => group));
+    }
+    const provinceRow = databaseRows.insertRow();
+    const provinceSelect = document.createElement("select");
+    provinceSelect.id = "province-select";
+    provinceSelect.setAttribute("aria-label", "เลือกจังหวัด");
+    provinceSelect.add(new Option("เลือกจังหวัด", ""));
+    for (const name of provinces) provinceSelect.add(new Option(name, name));
+    provinceRow.insertCell().append(provinceSelect);
+    const updateProvinceButtons = appendGroupButtons(provinceRow, () => databaseGroups.find(group => group[0] === provinceSelect.value));
+    provinceSelect.addEventListener("change", () => updateProvinceButtons.forEach(update => update()));
+    window.addEventListener('crod-database-change', () => {
+      const previous = provinceSelect.value;
+      const names = Array.from(new Set(CrodDatabase.map(row => row[6]))).sort((a,b)=>a.localeCompare(b,'th'));
+      databaseGroups.splice(3, databaseGroups.length-3, ...names.map(name=>[name,row=>row[6]===name]));
+      provinceSelect.replaceChildren(new Option('เลือกจังหวัด',''),...names.map(name=>new Option(name,name)));
+      provinceSelect.value = names.includes(previous) ? previous : '';
+      [...refreshGroupButtons,...updateProvinceButtons].forEach(update=>update());
+      let affected=false;
+      for(const [key,definition] of aggregateDefinitions) {
+        if(!selectedPoints.has(key))continue;
+        const {matches,index}=definition;
+        const members=Array.from(new Map(CrodDatabase.filter(matches).filter(row=>row[index+1])
+          .map(row=>[String(row[index+1]),{pk:String(row[index+1]),name:row[index]}])).values());
+        if(members.length)aggregateGroups.set(key,members);
+        else {aggregateGroups.delete(key);selectedPoints.delete(key);}
+        affected=true;
+      }
+      if(affected)renderSelection();
+    });
+    function renderSelection() {
+      window.invalidatePeriodChart?.();
+      details.hidden = selectedPoints.size === 0;
+      details.replaceChildren();
+      const table = document.createElement("table");
+      table.className = "selected-points";
+      const header = table.createTHead().insertRow();
+      for (const label of ["ชื่อจุดวัด", "PK_POINT", "จัดการ"]) {
+        header.appendChild(document.createElement("th")).textContent = label;
+      }
+      const body = table.createTBody();
+      for (const [code, name] of selectedPoints) {
+        const row = body.insertRow();
+        row.insertCell().textContent = name;
+        row.insertCell().textContent = aggregateGroups.has(code) ? "รวม "+aggregateGroups.get(code).length+" จุดวัด" : code;
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.textContent = "นำออก";
+        remove.setAttribute("aria-label", "นำออก " + name);
+        remove.onclick = () => { selectedPoints.delete(code); renderSelection(); };
+        row.insertCell().append(remove);
+      }
+      details.append(table);
+      period.disabled = selectedPoints.size === 0;
+      status.textContent = selectedPoints.size ? "เลือกแล้ว " + selectedPoints.size + " จุดวัด" : "";
+      status.hidden = selectedPoints.size === 0;
+      for (const button of document.querySelectorAll("[data-point-code]")) {
+        const checked = selectedPoints.has(button.dataset.pointCode);
+        button.textContent = checked ? "เลือกแล้ว ✓" : "เลือก";
+        button.setAttribute("aria-pressed", String(checked));
+      }
+    }
+    function selectPoint(code, name) {
+      selectedPoints.set(code, name || code);
+      renderSelection();
+    }
+
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+      if (period.disabled) { event.preventDefault(); return; }
+      const missing = !start.value ? "start" : !end.value || end.value < start.value ? "end" : "";
+      if (missing) {
+        event.preventDefault();
+        document.querySelector('.date-trigger[data-field="' + missing + '"]').click();
+        return;
+      }
+      await window.showPeriodCharts(Array.from(selectedPoints, ([pk, name]) => ({pk, name, members:aggregateGroups.get(pk)})), start.value, end.value);
+    });
+    const start = document.querySelector("#start");
+    const end = document.querySelector("#end");
+
+    const preset = document.querySelector("#date-preset");
+    preset.addEventListener("change", () => {
+      const today = new Intl.DateTimeFormat("sv-SE", {timeZone:"Asia/Bangkok",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
+      const dates = NccPeriodUtils.datePreset(preset.value, today);
+      if (!dates) return;
+      const format = new Intl.DateTimeFormat("th-TH-u-ca-buddhist", {timeZone:"UTC",year:"numeric",month:"long",day:"numeric"});
+      [start, end].forEach((field,index) => {
+        field.value = dates[index];
+        document.querySelector("#"+field.id+"-display").textContent = format.format(new Date(dates[index]));
+      });
+      window.invalidatePeriodChart?.();
+    });
+
+    const filters = document.querySelector("#map-filters");
+    const results = document.querySelector("#snapshots");
+    const mapConnection = document.querySelector("#map-connection");
+    const retryConnection = document.querySelector("#retry-connection");
+    const mapStatus = document.querySelector("#map-status");
+    const stationCodes = new Set("DBN SP AT1 AT2 SI LB1 LB2 CBD TW AY1 AY2 AY3 AY4 BI1 BI2 WN PH2 TL1 TL3 PTB KKI SR1 SR2 SR4 SR5 NY SR6 CC CC2 KLM BPK BPKS PA1 PA2 SMP WNK PTG KBB CB SC BBG CB2 BWN AP BL BL2 CTN SH1 SH2 RY1 RY2 RY3 RY4 BKI PDG CNO KLA CT TR".toLowerCase().split(" "));
+    function filterPoints() {
+      const terms = Array.from(filters.querySelectorAll("input[type=search]"), input => input.value.trim().toLowerCase());
+      const tags = Array.from(filters.querySelectorAll(":checked"), input => input.value.toLowerCase());
+      for (const row of results.querySelectorAll("tbody tr")) {
+        const name = row.dataset.name;
+        const text = row.dataset.search;
+        const val = NccPeriodUtils.numericValue(row.dataset.value);
+        row.hidden = !terms.every(term => text.includes(term)) || !tags.every(tag =>
+          tag === "no-kv" ? !/\(\s*kv\s*\)/i.test(name) :
+          tag === "nonzero" ? Number.isFinite(val) && val !== 0 :
+          tag === "สฟ. อปก" ? row.dataset.station === "true" : text.includes(tag));
+      }
+      for (const card of results.querySelectorAll(".card")) {
+        const count = card.querySelector(".point-count");
+        if (count) count.textContent = card.querySelectorAll("tbody tr:not([hidden])").length.toLocaleString("th-TH") + " จุดวัด";
+      }
+    }
+    let filterTimer;
+    filters.addEventListener("input", event => {
+      clearTimeout(filterTimer);
+      if (event.target.type === "search") filterTimer = setTimeout(filterPoints, 180);
+      else filterPoints();
+    });
+    filters.addEventListener("reset", () => {
+      clearTimeout(filterTimer);
+      setTimeout(filterPoints, 0);
+    });
+    filters.addEventListener("submit", event => event.preventDefault());
+
+    async function showSnapshot(instant) {
+      const time = Object.fromEntries(new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Asia/Bangkok", year: "numeric", month: "2-digit", day: "2-digit",
+        hour: "2-digit", minute: "2-digit", hourCycle: "h23"
+      }).formatToParts(instant).map(part => [part.type, part.value]));
+      const day = [time.year, time.month, time.day].join("-");
+      const slot = time.hour + (Number(time.minute) < 30 ? ":00" : ":30");
+      const card = document.createElement("section");
+      card.className = "card";
+      const heading = document.createElement("h2");
+      const thaiDate = new Intl.DateTimeFormat("th-TH-u-ca-buddhist", {
+        timeZone: "Asia/Bangkok", day: "numeric", month: "long", year: "numeric", era: "short"
+      }).format(instant);
+      heading.textContent = thaiDate + " เวลา " + slot + " น.";
+      card.append(heading);
+      results.append(card);
+      try {
+        const parse = text => new DOMParser().parseFromString(text, "application/xml");
+        let xml = parse(await window.nccMapAt(day, slot));
+        if (xml.documentElement.localName === "string") xml = parse(xml.documentElement.textContent);
+        if (xml.querySelector("parsererror") || xml.documentElement.localName === "html") throw Error();
+        const points = xml.getElementsByTagNameNS("*", "val");
+        const count = document.createElement("span");
+        count.className = "point-count";
+        count.setAttribute("aria-live", "polite");
+        count.textContent = "0 จุดวัด";
+        heading.append(count);
+        if (!points.length) {
+          card.append("ไม่มีข้อมูลในเวลานี้");
+          return true;
+        }
+        const table = document.createElement("table");
+        const header = table.createTHead().insertRow();
+        for (const title of ["ชื่อจุดวัด (PNAME)", "PK_POINT", "ค่า (VAL)", ""]) {
+          header.appendChild(document.createElement("th")).textContent = title;
+        }
+        const sort = document.createElement("button");
+        sort.type = "button";
+        sort.textContent = "Sort";
+        sort.className = "sort-toggle";
+        sort.setAttribute("aria-pressed", "false");
+        sort.style.cssText = "padding:2px 6px;font-size:13px;margin-left:6px";
+        sort.setAttribute("aria-label", "เรียงค่าสัมบูรณ์ของ VAL จากมากไปน้อย");
+        header.cells[2].append(sort);
+        const body = table.createTBody();
+        sort.addEventListener("click", () => {
+          const magnitude = row => {
+            const value = NccPeriodUtils.numericValue(row.dataset.value);
+            return Number.isFinite(value) ? Math.abs(value) : -Infinity;
+          };
+          const enabled = sort.getAttribute("aria-pressed") !== "true";
+          sort.setAttribute("aria-pressed", String(enabled));
+          const rows = Array.from(body.rows);
+          rows.sort(enabled
+            ? (a, b) => magnitude(b) - magnitude(a) || Number(a.dataset.originalOrder) - Number(b.dataset.originalOrder)
+            : (a, b) => Number(a.dataset.originalOrder) - Number(b.dataset.originalOrder));
+          body.append(...rows);
+        });
+        for (const point of points) {
+          const row = body.insertRow();
+          row.dataset.originalOrder = row.sectionRowIndex;
+          for (const key of ["PNAME", "PK_POINT", "VAL"]) {
+            row.insertCell().textContent = point.getElementsByTagNameNS("*", key)[0]?.textContent ?? "";
+          }
+          row.dataset.name = row.cells[0].textContent.toLowerCase();
+          row.dataset.search = row.dataset.name + " " + row.cells[1].textContent.toLowerCase();
+          row.dataset.station = String(row.dataset.name.split(/[^a-z0-9]+/).some(code => stationCodes.has(code)));
+          row.dataset.value = row.cells[2].textContent;
+          const value = NccPeriodUtils.numericValue(row.dataset.value);
+          row.cells[2].textContent = value === null ? "—" : value.toLocaleString("en-US", {minimumFractionDigits:3,maximumFractionDigits:3});
+          const button = document.createElement("button");
+          button.type = "button";
+          button.textContent = "เลือก";
+          const code = row.cells[1].textContent.trim();
+          const name = row.cells[0].textContent.trim();
+          button.disabled = !/^[0-9]+$/.test(code);
+          button.setAttribute("aria-label", "เลือกจุดวัด " + name + " " + code);
+          button.dataset.pointCode = code;
+          button.textContent = selectedPoints.has(code) ? "เลือกแล้ว ✓" : "เลือก";
+          button.setAttribute("aria-pressed", String(selectedPoints.has(code)));
+          button.onclick = () => {
+            if (selectedPoints.has(code)) { selectedPoints.delete(code); renderSelection(); }
+            else selectPoint(code, name);
+          };
+          row.insertCell().append(button);
+        }
+        const tableScroll = document.createElement("div");
+        tableScroll.className = "snapshot-scroll";
+        tableScroll.append(table);
+        card.append(tableScroll);
+        filterPoints();
+        return true;
+      } catch {
+        card.append("อ่านข้อมูลจาก NCC ไม่สำเร็จ");
+      }
+    }
+
+    let connecting = false;
+    async function connectSnapshot() {
+      if (connecting) return;
+      mapConnection.hidden = false;
+      retryConnection.hidden = true;
+      if (!window.nccMapAt) {
+        mapStatus.textContent = "ยังไม่พบการเชื่อมต่อ NCC กรุณาเปิดผ่านโปรแกรม หรือเปิดส่วนขยาย NCC แล้วลองอีกครั้ง";
+        retryConnection.hidden = false;
+        return;
+      }
+      connecting = true;
+      results.replaceChildren();
+      results.setAttribute("aria-busy", "true");
+      mapStatus.textContent = "กำลังเชื่อมต่อ NCC อัตโนมัติ…";
+      try {
+        const connected = await showSnapshot(new Date(Date.now() - 2 * 60 * 60 * 1000));
+        if (connected) {
+          results.closest(".pane").classList.add("connected");
+          mapConnection.hidden = true;
+          mapStatus.textContent = "";
+        } else {
+          mapStatus.textContent = window.ArevaConfig?.nccGateway ? "เชื่อมต่อ NCC ไม่สำเร็จ" : "Database CROD พร้อมใช้งานออนไลน์ · การแสดงค่าจุดวัดและกราฟต้องตั้งค่า HTTPS Gateway ที่เข้าถึง NCC ได้";
+          retryConnection.hidden = false;
+        }
+      } finally {
+        connecting = false;
+        results.setAttribute("aria-busy", "false");
+      }
+    }
+    retryConnection.addEventListener("click", connectSnapshot);
+    if (document.readyState === "complete") connectSnapshot();
+    else window.addEventListener("load", connectSnapshot, {once:true});
+  </script>
+  <dialog id="thai-calendar" aria-label="เลือกวันที่">
+    <div class="calendar-nav"><button type="button" id="previous" aria-label="ก่อนหน้า">‹</button><button type="button" id="calendar-title"></button><button type="button" id="next" aria-label="ถัดไป">›</button></div>
+    <div class="calendar-grid"></div>
+    <div class="calendar-footer"><button type="button" id="today">วันนี้</button><button type="button" id="clear-date">ล้าง</button></div>
+  </dialog>
+  <script src="thai-calendar.js"></script>
+  <script src="period-chart.js"></script>
+  <script src="crod-validation.js"></script>
+  <script src="crod-editor.js"></script>
+</body>
+</html>

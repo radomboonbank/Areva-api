@@ -1,0 +1,41 @@
+.header-title { display:flex; align-items:center; flex-wrap:wrap; gap:12px 24px }
+#open-crod-database { background:#f6fbff; border-color:#9db8c9; color:#183c59; font-weight:700 }
+#crod-editor { box-sizing:border-box; inset:0; margin:0; width:100vw; max-width:100vw; height:100dvh; max-height:100dvh; padding:0; border:0; border-radius:0; overflow:hidden; color:#183b51; background:#f4f9fa }
+#crod-editor::backdrop { background:#193b4b66; backdrop-filter:blur(3px) }
+.db-shell { box-sizing:border-box; display:flex; flex-direction:column; height:100%; padding:10px; gap:10px; min-height:0; min-width:0 }
+.db-titlebar,.db-toolbar { display:flex; align-items:center; flex-wrap:wrap; gap:12px }
+.db-titlebar h2 { font-size:1.6rem; margin:0 }
+.db-titlebar button { margin-left:auto }
+.db-description { margin:0; color:#506c7c; font-size:.95rem }
+.db-toolbar input { width:min(360px,100%); flex:1; min-width:180px }
+.db-toolbar span { margin-right:auto }
+#crod-editor button { min-height:36px; font-size:.95rem }
+#crod-editor .db-primary { background:#d4e8f7; border-color:#a1c3da; color:#153c57; font-weight:700 }
+#crod-editor .db-danger { background:#fff0f0; border-color:#d6a8a8; color:#8c3030 }
+.db-scroll { flex:1; min-height:100px; min-width:0; overflow-y:auto; overflow-x:hidden; scrollbar-gutter:stable; border-radius:12px; background:#fff; padding:0 6px 6px }
+.db-table { width:100%; min-width:0; table-layout:fixed; border-collapse:separate; border-spacing:0 6px; font-size:clamp(.875rem,1.5vw,1.25rem); line-height:1.5 }
+.db-table th,.db-table td { box-sizing:border-box; white-space:nowrap; word-break:normal; overflow-wrap:normal; overflow:hidden; text-overflow:ellipsis }
+.db-table th { position:sticky; top:0; z-index:1; background:#f6fafc; font-weight:700; color:#183b51; border-bottom:2px solid #b6cad6; padding:10px 4px }
+.db-table th:nth-child(1) { width:6% }
+.db-table th:nth-child(2) { width:7% }
+.db-table th:nth-child(3),.db-table th:nth-child(5) { width:20% }
+.db-table th:nth-child(4),.db-table th:nth-child(6) { width:10.5% }
+.db-table th:nth-child(7) { width:11% }
+.db-table th:nth-child(8) { width:15% }
+.db-table td { padding:10px 4px; border:0; border-right:1px solid #bfced380; background:#dcecf7; vertical-align:middle; font-weight:500 }
+.db-table tr:nth-child(3n+2) td { background:#ecf5ed }
+.db-table tr:nth-child(3n) td { background:#d5eeeb }
+.db-table td:first-child { border-radius:10px 0 0 10px; font-weight:700 }
+.db-table td:last-child { border-radius:0 10px 10px 0; border-right:0 }
+.db-table td:nth-child(4),.db-table td:nth-child(6) { font-variant-numeric:tabular-nums }
+.db-table td button+button { margin-left:4px }
+#crod-editor .db-table button { white-space:nowrap; padding:5px 6px; min-height:34px; font-size:inherit }
+.db-table tr[data-editing] td { background:#fff7dc; box-shadow:inset 0 1px #d8c47c,inset 0 -1px #d8c47c }
+#crod-editor .db-table tr[data-editing] td:last-child button { padding-inline:2px }
+.db-table input { box-sizing:border-box; width:100%; min-width:0; padding:6px 2px; background:#fff; font:inherit }
+.db-feedback { margin:0; min-height:1.5em; color:#31556b }
+.db-feedback:empty { display:none }
+.db-feedback[data-error=true] { color:#9e2929 }
+.db-delete-confirm:not([hidden]) { display:flex; align-items:center; flex-wrap:wrap; gap:10px; background:#fff2f0; border:1px solid #d5aeaa; padding:12px; border-radius:10px }
+.db-delete-confirm span { flex:1 }
+@media(max-width:600px) { .db-shell { padding:12px; gap:10px } .db-titlebar h2 { font-size:1.25rem } }
