@@ -14,7 +14,7 @@
   const find=id=>dialog.querySelector('#'+id),tbody=dialog.querySelector('tbody');
   const headers=['สถานี','kV','ชื่อจุดวัด MW','รหัส MW','ชื่อจุดวัด MV','รหัส MV','จังหวัด','จัดการ'];
   for(const [index,name] of headers.entries()) {const th=document.createElement('th');th.scope='col';th.textContent=name;th.title=columns[index]||name;dialog.querySelector('thead tr').append(th);}
-  find('db-storage').textContent=window.crodDatabaseRequest?'บันทึกใน Firebase · ข้อมูลส่วนกลางสำหรับทุกเครื่อง':'บันทึกในเบราว์เซอร์นี้ · ใช้ “สำรองข้อมูล JSON” เพื่อเก็บสำเนา';
+  find('db-storage').textContent=window.crodDatabaseRequest?'บันทึกใน Firebase · ทุกคนที่เปิดลิงก์เพิ่ม แก้ไข และลบข้อมูลร่วมกันได้':'บันทึกในเบราว์เซอร์นี้ · ใช้ “สำรองข้อมูล JSON” เพื่อเก็บสำเนา';
   const message=(text,error=false)=>{find('db-message').textContent=text;find('db-message').dataset.error=String(error);};
   function changed(rows) {
     window.CrodDatabase=rows;
@@ -25,12 +25,10 @@
       const state=window.crodDatabaseRequest ? await window.crodDatabaseRequest('GET') : JSON.parse(localStorage.getItem(storageKey)||'null');
       changed(CrodValidation.validate(state?.rows ?? seed));
       revision=state?.revision ?? 0;ready=true;message('');
-    } catch (error) {ready=false;message(error.code==='permission-denied' ? 'ยังไม่มีสิทธิ์อ่านฐานข้อมูล กรุณาเข้าสู่ระบบผู้ดูแล' : (error.message || 'อ่านฐานข้อมูลไม่สำเร็จ กรุณาปิดแล้วเปิด Database CROD อีกครั้ง'),true);}
+    } catch (error) {ready=false;message(error.code==='permission-denied' ? 'อ่านฐานข้อมูลไม่ได้ กรุณาตรวจการเชื่อมต่อ Firebase' : (error.message || 'อ่านฐานข้อมูลไม่สำเร็จ กรุณาปิดแล้วเปิด Database CROD อีกครั้ง'),true);}
     render();
   }
-  function action(text,fn,style='') {const b=document.createElement('button');b.type='button';b.textContent=text;b.className=style;b.disabled=busy||!ready||!canEdit();b.onclick=fn;return b;}
-  const canEdit=()=>!window.crodCanEdit || window.crodCanEdit();
-  window.addEventListener('crod-permissions-change',()=>{if(!canEdit())editing=null;if(!ready&&canEdit())load();else render();});
+  function action(text,fn,style='') {const b=document.createElement('button');b.type='button';b.textContent=text;b.className=style;b.disabled=busy||!ready;b.onclick=fn;return b;}
   function render() {
     tbody.replaceChildren();
     const query=find('db-search').value.trim().toLowerCase();
@@ -61,7 +59,7 @@
     data.forEach((values,index)=>{if(index===editing || values.join(' ').toLowerCase().includes(query)){row(values,index);count++;}});
     if(editing===-1)row(['','','','','','',''],-1);
     find('db-count').textContent=count.toLocaleString('th-TH')+' / '+data.length.toLocaleString('th-TH')+' รายการ';
-    find('db-add').disabled=!ready||busy||editing!==null||!canEdit();
+    find('db-add').disabled=!ready||busy||editing!==null;
     find('db-search').disabled=editing!==null||busy;
     find('db-close').disabled=busy;
     if(!count&&editing!==-1){const td=tbody.insertRow().insertCell();td.colSpan=8;td.textContent='ไม่พบรายการ';}

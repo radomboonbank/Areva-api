@@ -8,7 +8,8 @@
 
 ใช้ Cloud Firestore โปรเจกต์ `crod-api-areva` ภูมิภาค `asia-southeast3` (กรุงเทพฯ)
 ข้อมูลส่วนกลางอยู่ที่ `crod/database` โดยเก็บ `rowsJson` และ `revision` เพื่อป้องกันการเขียนทับเมื่อหลายเครื่องแก้ไขพร้อมกัน
-ขณะนี้การอ่านและแก้ไขจำกัดเฉพาะบัญชีผู้ดูแลที่กำหนดใน `firestore.rules` ระหว่างรอยืนยันนโยบายการเปิดอ่านสำหรับผู้ใช้ทั่วไป
+ทุกคนที่เปิดลิงก์สามารถอ่าน เพิ่ม แก้ไข และลบรายการได้ โดยไม่ต้องล็อกอิน ตามนโยบายที่เจ้าของโปรเจกต์กำหนด
+กฎจำกัดการเขียนไว้ที่ snapshot นี้ ตรวจ revision และเวลาบันทึก และไม่อนุญาตลบเอกสารฐานข้อมูลทั้งชุดโดยตรง
 ไม่เก็บรหัสผ่านหรือ service-account key ใน repository
 
 ใช้ปุ่ม **สำรองข้อมูล JSON** ก่อนแก้ไขข้อมูลสำคัญ ขนาด snapshot จำกัด 700 KB
@@ -27,6 +28,6 @@ Database CROD ใช้งานแยกจาก NCC ได้ การแส
 ## พัฒนา
 
 ไฟล์หลัก `index.html` และ `point-value-by-period-time.html` เป็นหน้าเดียวกัน
-ทดสอบด้วย static HTTP server; เปิดผ่าน HTTPS สำหรับ Google login ในระบบจริง
+ทดสอบด้วย static HTTP server; เปิดผ่าน HTTPS ในระบบจริง
 Firebase Web SDK ใช้จาก Google CDN รุ่นที่ตรึงไว้ใน `firebase-client.js`
 เผยแพร่ Pages จาก `main` โฟลเดอร์ root; กฎ Firestore ต้องเผยแพร่แยกผ่าน Firebase Console หรือ Firebase CLI
